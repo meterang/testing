@@ -72,18 +72,32 @@ console.log(`🏆 Redeemed Points Found: ${redeemedPoints}`);
     transactionId: String(orderId),
     storeID: "swanloyalytics",
     points: redeemedPoints, // adjust dynamically if needed
-      lineItems: lineItems.map((item) => ({
-        stockNo: item.sku || "N/A",
-        description: item.title,
-        markdownFlag: "N",
-        quantity: item.quantity,
-        rate: item.price,
-        value: item.price * item.quantity,
-        discount: item.total_discount,
-        amount: item.price * item.quantity,
-        grossAmount: item.price * item.quantity,
-        billNumber: String(orderId),
-      })),
+      "lineItems": [
+            {
+                "stockNo": "9111111",
+                "description": "PURE SPA WATER LIQUID CLEANSING CREAM",
+                "markdownFlag": "N",
+                "quantity": 1,
+                "rate": 30,
+                "value": 30,
+                "discount": 10,
+                "amount": 28.57,
+                "grossAmount": 30,
+                "billNumber": "{{billNum}}"
+            },
+            {
+                "stockNo": "9000001",
+                "description": "PURE SPA WATER BUBBLE CLEANSING FOAM",
+                "markdownFlag": "N",
+                "quantity": 1,
+                "rate": 70,
+                "value": 70,
+                "discount": 10,
+                "amount": 68.1,
+                "grossAmount": 70,
+                "billNumber": "{{billNum}}"
+            }
+        ]
     
   };
 
