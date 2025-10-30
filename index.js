@@ -2,7 +2,9 @@ import express from "express";
 import crypto from "crypto";
 import fetch from "node-fetch"; // make sure to install: npm install node-fetch
 import cookieParser from "cookie-parser";
+import dotenv from "dotenv";
 
+dotenv.config();
 const app = express();
 
 const SHOPIFY_WEBHOOK_SECRET =
