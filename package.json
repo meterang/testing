@@ -12,6 +12,7 @@
   "license": "ISC",
   "dependencies": {
     "cookie-parser": "^1.4.7",
+    "crypto": "^1.0.1",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "node-fetch": "^3.3.2",
