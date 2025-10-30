@@ -5,12 +5,13 @@ import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
 
 dotenv.config();
+
 const app = express();
 
 const SHOPIFY_WEBHOOK_SECRET =
   "1639c322f17870f11c59c12cd78ca47b6b4c16dbebf7e48f5283b778fce19335";
 
-// Middleware to capture raw body for HMAC verification
+app.use(cookieParser());
 app.use(
   express.json({
     verify: (req, res, buf) => {
@@ -18,7 +19,14 @@ app.use(
     },
   })
 );
-app.use(cookieParser()); 
+
+const {
+  SHOPIFY_API_KEY,
+  SHOPIFY_API_SECRET,
+  SCOPES,
+  HOST,
+  PORT = 3000,
+} = process.env;
 
 // Verify webhook function
 function verifyShopifyWebhook(req) {
@@ -29,6 +37,28 @@ function verifyShopifyWebhook(req) {
     .digest("base64");
   return digest === hmacHeader;
 }
+let accessToken = null;
+let activeShop = null;
+
+// STEP 1: Install / Auth route
+app.get("/auth", (req, res) => {
+  const shop = req.query.shop;
+  if (!shop) return res.status(400).send("Missing shop parameter");
+
+  const state = crypto.randomBytes(8).toString("hex");
+  res.cookie("state", state);
+
+  const redirectUri = `${HOST}/auth/callback`;
+  const installUrl =
+    `https://${shop}/admin/oauth/authorize?client_id=${SHOPIFY_API_KEY}` +
+    `&scope=${SCOPES}` +
+    `&state=${state}` +
+    `&redirect_uri=${redirectUri}`;
+
+  res.redirect(installUrl);
+});
+
+// STEP 2: OAuth callback
 app.get("/auth/callback", async (req, res) => {
   const { shop, hmac, code, state } = req.query;
   const stateCookie = req.cookies.state;
@@ -36,40 +66,42 @@ app.get("/auth/callback", async (req, res) => {
   if (state !== stateCookie) return res.status(403).send("State mismatch");
 
   // Verify HMAC
-  const params = { ...req.query };
-  delete params.hmac;
-  const message = Object.keys(params)
+  const query = { ...req.query };
+  delete query.signature;
+  delete query.hmac;
+
+  const message = Object.keys(query)
     .sort()
-    .map(key => `${key}=${params[key]}`)
+    .map((key) => `${key}=${query[key]}`)
     .join("&");
+
   const generatedHmac = crypto
-    .createHmac("sha256", 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)
+    .createHmac("sha256", SHOPIFY_API_SECRET)
     .update(message)
     .digest("hex");
 
   if (generatedHmac !== hmac) return res.status(400).send("HMAC validation failed");
 
   // Exchange code for access token
-  const tokenUrl = `https://${shop}/admin/oauth/access_token`;
-  const tokenResponse = await fetch(tokenUrl, {
+  const tokenResponse = await fetch(`https://${shop}/admin/oauth/access_token`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      client_id: b775c7726e4b417239a13da36151620d,
-      client_secret: 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,
-      code
-    })
+      client_id: SHOPIFY_API_KEY,
+      client_secret: SHOPIFY_API_SECRET,
+      code,
+    }),
   });
 
   const tokenData = await tokenResponse.json();
-  if (!tokenData.access_token) {
+  if (!tokenData.access_token)
     return res.status(400).json({ error: "Failed to get access token" });
-  }
 
   accessToken = tokenData.access_token;
-  console.log("✅ Admin Token:", accessToken);
+  activeShop = shop;
 
-  res.send("✅ App installed and token generated successfully!");
+  console.log("✅ Access Token Generated:", accessToken);
+  res.send("✅ App installed successfully! You can now use the API.");
 });
 
 app.post("/apps/loyalty/api/createDiscount", async (req, res) => {
