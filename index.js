@@ -45,19 +45,33 @@ app.post("/webhooks/orders-create", async (req, res) => {
   const email = order.email;
   // const customerPhone = order.customer?.phone || order.billing_address?.phone || "";
 const customerPhone = 917487850484;
+  let redeemedPoints = 0;
+
+if (order.note_attributes && order.note_attributes.length > 0) {
+  const pointsAttr = order.note_attributes.find(
+    (attr) => attr.name?.toLowerCase() === "_redeemed_points"
+  );
+  if (pointsAttr && pointsAttr.value) {
+    redeemedPoints = Number(pointsAttr.value) || 0;
+  }
+}
+
+console.log(`🏆 Redeemed Points Found: ${redeemedPoints}`);
+
 
   const lineItems = order.line_items || [];
 
   console.log(`Order ID: ${orderId}`);
   console.log(`Email: ${email}`);
   console.log(`Phone: ${customerPhone}`);
+  console.log(`RedeemedPoints: ${redeemedPoints}`);
 
   // Prepare payload for Loyalytics API
   const payload = {
     mobile: customerPhone,
     transactionId: String(orderId),
-    storeID: "TEST",
-    points: 100, // adjust dynamically if needed
+    storeID: "swanloyalytics",
+    points: redeemedPoints, // adjust dynamically if needed
     billLineItems: {
       lineItems: lineItems.map((item) => ({
         stockNo: item.sku || "N/A",
