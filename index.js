@@ -38,7 +38,7 @@ app.get("/auth/callback", async (req, res) => {
     .map(key => `${key}=${params[key]}`)
     .join("&");
   const generatedHmac = crypto
-    .createHmac("sha256", SHOPIFY_API_SECRET)
+    .createHmac("sha256", "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")
     .update(message)
     .digest("hex");
 
