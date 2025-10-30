@@ -46,7 +46,11 @@ app.get("/auth", (req, res) => {
   if (!shop) return res.status(400).send("Missing shop parameter");
 
   const state = crypto.randomBytes(8).toString("hex");
-  res.cookie("state", state);
+  res.cookie("state", state, {
+  httpOnly: true,
+  secure: true,
+  sameSite: "none",
+});
 
   const redirectUri = `${HOST}/auth/callback`;
   const installUrl =
