@@ -89,7 +89,7 @@ console.log(`🏆 Redeemed Points Found: ${redeemedPoints}`);
   };
 
   console.log("📦 Payload to Loyalytics:", JSON.stringify(payload, null, 2));
-
+if(redeemedPoints > 0){
   // Send to Loyalytics
   try {
     const response = await fetch(
@@ -110,6 +110,9 @@ console.log(`🏆 Redeemed Points Found: ${redeemedPoints}`);
   } catch (error) {
     console.error("❌ Error calling Loyalytics API:", error);
   }
+}else{
+console.log("No redeem points");
+}
 });
 
 app.listen(3000, () => {
