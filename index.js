@@ -38,7 +38,7 @@ app.post("/webhooks/orders-create", async (req, res) => {
 
   const order = req.body;
   console.log("✅ Order Create Webhook Received:");
-  console.log(JSON.stringify(order, null, 2));
+  // console.log(JSON.stringify(order, null, 2));
 
   // Extract required fields
   const orderId = order.id;
@@ -55,9 +55,6 @@ if (order.note_attributes && order.note_attributes.length > 0) {
     redeemedPoints = Number(pointsAttr.value) || 0;
   }
 }
-
-console.log(`🏆 Redeemed Points Found: ${redeemedPoints}`);
-
 
   const lineItems = order.line_items || [];
 
@@ -101,7 +98,7 @@ console.log(`🏆 Redeemed Points Found: ${redeemedPoints}`);
     
   };
 
-  console.log("📦 Payload to Loyalytics:", JSON.stringify(payload, null, 2));
+  // console.log("📦 Payload to Loyalytics:", JSON.stringify(payload, null, 2));
 if(redeemedPoints > 0){
   // Send to Loyalytics
   try {
