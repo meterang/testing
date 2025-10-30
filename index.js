@@ -43,8 +43,8 @@ app.post("/webhooks/orders-create", async (req, res) => {
   // Extract required fields
   const orderId = order.id;
   const email = order.email;
-  const customerPhone = order.customer?.phone || order.billing_address?.phone || "";
-customerPhone = customerPhone.replace(/\D/g, ""); // removes all non-numeric characters
+  // const customerPhone = order.customer?.phone || order.billing_address?.phone || "";
+const customerPhone = 917487850484;
 
   const lineItems = order.line_items || [];
 
