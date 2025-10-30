@@ -1,8 +1,10 @@
 import express from "express";
 import crypto from "crypto";
 import fetch from "node-fetch"; // make sure to install: npm install node-fetch
+import cookieParser from "cookie-parser";
 
 const app = express();
+
 const SHOPIFY_WEBHOOK_SECRET =
   "1639c322f17870f11c59c12cd78ca47b6b4c16dbebf7e48f5283b778fce19335";
 
@@ -14,6 +16,7 @@ app.use(
     },
   })
 );
+app.use(cookieParser()); 
 
 // Verify webhook function
 function verifyShopifyWebhook(req) {
