@@ -45,7 +45,9 @@ app.use((req, res, next) => {
 // ---------- Webhook route ----------
 app.post("/webhooks/orders-create", async (req, res) => {
   const data = req.body;
-  console.log("data", data);
+  return res.status(200).json({
+    data: data
+});
 });
 
 // ---------- Optional: endpoint to register webhook (call manually or during install) ----------
