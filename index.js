@@ -72,7 +72,6 @@ console.log(`🏆 Redeemed Points Found: ${redeemedPoints}`);
     transactionId: String(orderId),
     storeID: "swanloyalytics",
     points: redeemedPoints, // adjust dynamically if needed
-    billLineItems: {
       lineItems: lineItems.map((item) => ({
         stockNo: item.sku || "N/A",
         description: item.title,
@@ -85,7 +84,7 @@ console.log(`🏆 Redeemed Points Found: ${redeemedPoints}`);
         grossAmount: item.price * item.quantity,
         billNumber: String(orderId),
       })),
-    },
+    
   };
 
   console.log("📦 Payload to Loyalytics:", JSON.stringify(payload, null, 2));
