@@ -68,7 +68,7 @@ console.log(`🏆 Redeemed Points Found: ${redeemedPoints}`);
 
   // Prepare payload for Loyalytics API
   const payload = {
-    mobile: customerPhone,
+    mobile: String(customerPhone),
     transactionId: String(orderId),
     storeID: "swanloyalytics",
     points: redeemedPoints, // adjust dynamically if needed
