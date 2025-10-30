@@ -17,6 +17,9 @@ const {
 
 const app = express();
 
+// Middleware to parse JSON request bodies
+app.use(express.json());
+
 // We need raw body for HMAC verification. Capture raw body and JSON parse separately.
 app.use((req, res, next) => {
   let data = "";
@@ -83,5 +86,5 @@ app.get("/", (req, res) => res.send("Shopify OTP webhook server running"));
 
 app.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);
-  console.log(`Public webhook endpoint (expected): ${HOST}/webhooks/orders-create`);
+  console.log(`Public webhook endpoint (expected): https://testing-production-4760.up.railway.app/webhooks/orders-create`);
 });
