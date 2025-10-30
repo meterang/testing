@@ -24,7 +24,101 @@ function verifyShopifyWebhook(req) {
     .digest("base64");
   return digest === hmacHeader;
 }
+app.get("/auth/callback", async (req, res) => {
+  const { shop, hmac, code, state } = req.query;
+  const stateCookie = req.cookies.state;
 
+  if (state !== stateCookie) return res.status(403).send("State mismatch");
+
+  // Verify HMAC
+  const params = { ...req.query };
+  delete params.hmac;
+  const message = Object.keys(params)
+    .sort()
+    .map(key => `${key}=${params[key]}`)
+    .join("&");
+  const generatedHmac = crypto
+    .createHmac("sha256", SHOPIFY_API_SECRET)
+    .update(message)
+    .digest("hex");
+
+  if (generatedHmac !== hmac) return res.status(400).send("HMAC validation failed");
+
+  // Exchange code for access token
+  const tokenUrl = `https://${shop}/admin/oauth/access_token`;
+  const tokenResponse = await fetch(tokenUrl, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      client_id: b775c7726e4b417239a13da36151620d,
+      client_secret: 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,
+      code
+    })
+  });
+
+  const tokenData = await tokenResponse.json();
+  if (!tokenData.access_token) {
+    return res.status(400).json({ error: "Failed to get access token" });
+  }
+
+  accessToken = tokenData.access_token;
+  console.log("✅ Admin Token:", accessToken);
+
+  res.send("✅ App installed and token generated successfully!");
+});
+
+app.post("/apps/loyalty/api/createDiscount", async (req, res) => {
+  try {
+    const { points } = req.body;
+    if (!accessToken) throw new Error("Access token not available");
+    if (!points) throw new Error("Points missing");
+
+    const discountCode = `LOYALTY-${points}`;
+    const discountValue = points;
+
+    const response = await fetch(`https://${req.query.shop}/admin/api/2024-07/price_rules.json`, {
+      method: "POST",
+      headers: {
+        "X-Shopify-Access-Token": accessToken,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        price_rule: {
+          title: discountCode,
+          target_type: "line_item",
+          target_selection: "all",
+          allocation_method: "across",
+          value_type: "fixed_amount",
+          value: `-${discountValue}`,
+          customer_selection: "all",
+          starts_at: new Date().toISOString()
+        }
+      })
+    });
+
+    const data = await response.json();
+    const ruleId = data.price_rule?.id;
+    if (!ruleId) throw new Error("Failed to create price rule");
+
+    // Create discount code for rule
+    const codeRes = await fetch(`https://${req.query.shop}/admin/api/2024-07/price_rules/${ruleId}/discount_codes.json`, {
+      method: "POST",
+      headers: {
+        "X-Shopify-Access-Token": accessToken,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ discount_code: { code: discountCode } })
+    });
+
+    const codeData = await codeRes.json();
+    if (!codeData.discount_code?.code) throw new Error("Failed to create discount code");
+
+    res.json({ success: true, discount_code: discountCode });
+  } catch (err) {
+    console.error("❌ Error:", err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
 // Webhook route
 app.post("/webhooks/orders-create", async (req, res) => {
   const verified = verifyShopifyWebhook(req);
