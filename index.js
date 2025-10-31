@@ -122,6 +122,7 @@ app.get("/auth/callback", async (req, res) => {
     }
  
     console.log("✅ Access Token:", tokenData.access_token);
+    accessToken = tokenData.access_token;
     res.send("✅ App installed successfully! Token generated in console.");
   } catch (err) {
     console.error("Error getting token:", err);
@@ -132,56 +133,77 @@ app.get("/auth/callback", async (req, res) => {
 app.listen(3000, () =>
   console.log("🚀 Shopify OAuth app running on http://localhost:3000")
 );
-app.post("/apps/loyalty/api/createDiscount", async (req, res) => {
+// const SHOP = "swanloyalytics.myshopify.com";
+const ADMIN_TOKEN = accessToken;
+app.post("/webhooks/discounts/create", async (req, res) => {
+  const { discountCode, discountValue } = req.body; // e.g., LOYALTY100, 10%
+
   try {
-    const { points } = req.body;
-    if (!accessToken) throw new Error("Access token not available");
-    if (!points) throw new Error("Points missing");
+    // 1️⃣ Check if discount exists
+    const existing = await axios.get(
+      `https://${shop}/admin/api/2024-10/discount_codes.json`,
+      {
+        headers: {
+          "X-Shopify-Access-Token": ADMIN_TOKEN,
+          "Content-Type": "application/json",
+        },
+      }
+    );
 
-    const discountCode = `LOYALTY-${points}`;
-    const discountValue = points;
+    const found = existing.data.discount_codes.find(
+      (d) => d.code.toUpperCase() === discountCode.toUpperCase()
+    );
 
-    const response = await fetch(`https://${req.query.shop}/admin/api/2024-07/price_rules.json`, {
-      method: "POST",
-      headers: {
-        "X-Shopify-Access-Token": accessToken,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
+    if (found) {
+      return res.json({ message: "Discount already exists", code: found.code });
+    }
+
+    // 2️⃣ Create discount (via price rule)
+    const priceRuleResp = await axios.post(
+      `https://${shop}/admin/api/2024-10/price_rules.json`,
+      {
         price_rule: {
-          title: discountCode,
+          title: `Loyalty ${discountValue}% off`,
           target_type: "line_item",
           target_selection: "all",
           allocation_method: "across",
-          value_type: "fixed_amount",
+          value_type: "percentage",
           value: `-${discountValue}`,
           customer_selection: "all",
-          starts_at: new Date().toISOString()
-        }
-      })
-    });
-
-    const data = await response.json();
-    const ruleId = data.price_rule?.id;
-    if (!ruleId) throw new Error("Failed to create price rule");
-
-    // Create discount code for rule
-    const codeRes = await fetch(`https://${req.query.shop}/admin/api/2024-07/price_rules/${ruleId}/discount_codes.json`, {
-      method: "POST",
-      headers: {
-        "X-Shopify-Access-Token": accessToken,
-        "Content-Type": "application/json"
+          starts_at: new Date().toISOString(),
+        },
       },
-      body: JSON.stringify({ discount_code: { code: discountCode } })
+      {
+        headers: {
+          "X-Shopify-Access-Token": ADMIN_TOKEN,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    const priceRuleId = priceRuleResp.data.price_rule.id;
+
+    // 3️⃣ Create discount code for that price rule
+    const discountResp = await axios.post(
+      `https://${shop}/admin/api/2024-10/price_rules/${priceRuleId}/discount_codes.json`,
+      {
+        discount_code: { code: discountCode },
+      },
+      {
+        headers: {
+          "X-Shopify-Access-Token": ADMIN_TOKEN,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    return res.json({
+      message: "Discount created successfully",
+      data: discountResp.data,
     });
-
-    const codeData = await codeRes.json();
-    if (!codeData.discount_code?.code) throw new Error("Failed to create discount code");
-
-    res.json({ success: true, discount_code: discountCode });
-  } catch (err) {
-    console.error("❌ Error:", err);
-    res.status(500).json({ success: false, message: err.message });
+  } catch (error) {
+    console.error(error.response?.data || error.message);
+    res.status(500).json({ error: "Error creating discount" });
   }
 });
 // Webhook route
