@@ -315,7 +315,7 @@ if(redeemedPoints > 0){
     );
 
     const tokenJson = await tokenResponse.json();
-    console.log("🔑 Auth Token Response:", tokenJson);
+    // console.log("🔑 Auth Token Response:", tokenJson);
 
     // Extract the actual token string
     const token = tokenJson?.data?.[0]?.token;
@@ -334,7 +334,7 @@ if(redeemedPoints > 0){
     );
 
     const result = await response.text();
-    console.log("🎯 Loyalytics API Response:", result);
+    console.log("🎯 Loyalytics API Response Succefully!");
   } catch (error) {
     console.error("❌ Error calling Loyalytics API:", error);
   }
