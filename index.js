@@ -40,81 +40,98 @@ function verifyShopifyWebhook(req) {
 let accessToken = null;
 let activeShop = null;
 
-// STEP 1: Install / Auth route
 app.get("/auth", (req, res) => {
   const shop = req.query.shop;
   if (!shop) return res.status(400).send("Missing shop parameter");
-
+ 
   const state = crypto.randomBytes(8).toString("hex");
-
-  const isProduction = process.env.NODE_ENV === "production";
-
-res.cookie("state", state, {
-  httpOnly: true,
-  secure: isProduction, // true only in production (HTTPS)
-  sameSite: isProduction ? "none" : "lax",
-  path: "/", // ensure it's available on all routes
-});
-
-console.log("State from cookie:", req.cookies.state);
-console.log("State from query:", state);
-
+ 
+  const isProduction = NODE_ENV === "production";
+ 
+  res.cookie("state", state, {
+    httpOnly: true,
+    secure: isProduction, // only true in production
+    sameSite: isProduction ? "none" : "lax",
+    path: "/",
+  });
+ 
+  console.log("Generated state:", state);
+ 
   const redirectUri = `${HOST}/auth/callback`;
   const installUrl =
     `https://${shop}/admin/oauth/authorize?client_id=${SHOPIFY_API_KEY}` +
     `&scope=${SCOPES}` +
     `&state=${state}` +
     `&redirect_uri=${redirectUri}`;
-
+ 
+  console.log("Redirecting to:", installUrl);
   res.redirect(installUrl);
 });
-
-// STEP 2: OAuth callback
+ 
+// Step 2: OAuth callback
 app.get("/auth/callback", async (req, res) => {
   const { shop, hmac, code, state } = req.query;
   const stateCookie = req.cookies.state;
-
-  if (state !== stateCookie) return res.status(403).send("State mismatch");
-
+ 
+  console.log("State from cookie:", stateCookie);
+  console.log("State from query:", state);
+ 
+  if (state !== stateCookie)
+    return res.status(403).send("State mismatch — possible CSRF attack.");
+ 
   // Verify HMAC
-  const query = { ...req.query };
-  delete query.signature;
-  delete query.hmac;
-
-  const message = Object.keys(query)
+  const params = { ...req.query };
+  delete params.signature;
+  delete params.hmac;
+ 
+  const message = Object.keys(params)
     .sort()
-    .map((key) => `${key}=${query[key]}`)
+    .map((key) => `${key}=${params[key]}`)
     .join("&");
-
+ 
   const generatedHmac = crypto
     .createHmac("sha256", SHOPIFY_API_SECRET)
     .update(message)
     .digest("hex");
-
-  if (generatedHmac !== hmac) return res.status(400).send("HMAC validation failed");
-
-  // Exchange code for access token
-  const tokenResponse = await fetch(`https://${shop}/admin/oauth/access_token`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      client_id: SHOPIFY_API_KEY,
-      client_secret: SHOPIFY_API_SECRET,
-      code,
-    }),
-  });
-
-  const tokenData = await tokenResponse.json();
-  if (!tokenData.access_token)
-    return res.status(400).json({ error: "Failed to get access token" });
-
-  accessToken = tokenData.access_token;
-  activeShop = shop;
-
-  console.log("✅ Access Token Generated:", accessToken);
-  res.send("✅ App installed successfully! You can now use the API.");
+ 
+  if (generatedHmac !== hmac) {
+    console.error("HMAC check failed!");
+    return res.status(400).send("HMAC validation failed.");
+  }
+ 
+  // Exchange temporary code for a permanent access token
+  try {
+    const tokenResponse = await fetch(
+      `https://${shop}/admin/oauth/access_token`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          client_id: SHOPIFY_API_KEY,
+          client_secret: SHOPIFY_API_SECRET,
+          code,
+        }),
+      }
+    );
+ 
+    const tokenData = await tokenResponse.json();
+ 
+    if (!tokenData.access_token) {
+      console.error("Token fetch failed:", tokenData);
+      return res.status(400).json({ error: "Failed to get access token" });
+    }
+ 
+    console.log("✅ Access Token:", tokenData.access_token);
+    res.send("✅ App installed successfully! Token generated in console.");
+  } catch (err) {
+    console.error("Error getting token:", err);
+    res.status(500).send("Server error while fetching token.");
+  }
 });
-
+ 
+app.listen(3000, () =>
+  console.log("🚀 Shopify OAuth app running on http://localhost:3000")
+);
 app.post("/apps/loyalty/api/createDiscount", async (req, res) => {
   try {
     const { points } = req.body;
