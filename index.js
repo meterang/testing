@@ -208,7 +208,7 @@ app.post("/shopify-proxy", async (req, res) => {
       body: formData.toString(),
     });
 
-    const data = await response.json();
+    // const data = await response.json();
     res.json({ success: true, data });
   } catch (error) {
     console.error("Cart update failed:", error);
