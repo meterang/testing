@@ -180,7 +180,7 @@ app.post("/api/get-customer-points", async (req, res) => {
     if (!customerRes.ok) throw new Error("Failed to fetch customer data");
 
     const result = await customerRes.json();
-    console.log("🟢 Customer Points Result:", result);
+    // console.log("🟢 Customer Points Result:", result);
 
     return res.json(result);
   } catch (err) {
