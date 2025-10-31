@@ -15,7 +15,10 @@ const SHOPIFY_WEBHOOK_SECRET =
 
 app.use(cookieParser());
 app.use(cors({
-  origin: "https://swanloyalytics.myshopify.com",
+  origin: origin: [
+    "https://swanloyalytics.myshopify.com",
+    "https://extensions.shopifycdn.com"
+  ],
   methods: ["GET", "POST", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true
