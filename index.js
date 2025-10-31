@@ -194,7 +194,7 @@ app.post("/shopify-proxy", async (req, res) => {
   const { points, finalCode } = req.body;
 
   try {
-   
+   const discountCode = `LOYALTY${points}`;
 const formData = new FormData();
   formData.append('attributes[loyalty_points]', points.toString());
   formData.append('attributes[_redeemed_points]', points.toString());
