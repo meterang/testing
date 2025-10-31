@@ -28,6 +28,10 @@ const {
   HOST,
   PORT = 3000,
 } = process.env;
+ const SWAN_KEY = "4cc03d9a494d4cffba53b2c9534a9e94";
+  const SWAN_CLIENT = "swan-test";
+  const AUTH_URL = `https://api.loyalytics.ai/swan/dev/auth/${SWAN_CLIENT}`;
+  const BASE_URL = `https://api.loyalytics.ai/swan/dev/${SWAN_CLIENT}`;
 
 // Verify webhook function
 function verifyShopifyWebhook(req) {
@@ -134,6 +138,47 @@ app.get("/auth/callback", async (req, res) => {
 app.listen(3000, () =>
   console.log("🚀 Shopify OAuth app running on http://localhost:3000")
 );
+
+
+app.post("/api/get-customer-points", async (req, res) => {
+  const { email, mobile } = req.body;
+  console.log("📥 Loyalty Points Request for:", email, mobile);
+
+  try {
+    // Step 1: Get Auth Token
+    const tokenRes = await fetch(`${AUTH_URL}/get-auth-token`, {
+      method: "GET",
+      headers: {
+        "Ocp-Apim-Subscription-Key": SWAN_KEY,
+        "client": SWAN_CLIENT,
+      },
+    });
+
+    const tokenData = await tokenRes.json();
+    const token = tokenData?.data?.[0]?.token;
+    if (!token) throw new Error("Missing token");
+
+    // Step 2: Fetch customer data
+    const customerRes = await fetch(`${BASE_URL}/get-customer?mobile=${mobile}&email=${email}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": token,
+      },
+    });
+
+    if (!customerRes.ok) throw new Error("Failed to fetch customer data");
+
+    const result = await customerRes.json();
+    console.log("🟢 Customer Points Result:", result);
+
+    return res.json(result);
+  } catch (err) {
+    console.error("❌ Backend Fetch Error:", err.message);
+    return res.status(500).json({ error: err.message });
+  }
+});
+
 const SHOP = "swanloyalytics.myshopify.com";
 const ADMIN_TOKEN = "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";
 app.post("/webhooks/discounts/create", async (req, res) => {
