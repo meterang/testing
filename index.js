@@ -51,6 +51,8 @@ app.get("/auth", (req, res) => {
   secure: true,
   sameSite: "none",
 });
+console.log("State from cookie:", req.cookies.state);
+console.log("State from query:", state);
 
   const redirectUri = `${HOST}/auth/callback`;
   const installUrl =
