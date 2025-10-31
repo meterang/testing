@@ -142,7 +142,7 @@ app.post("/webhooks/discounts/create", async (req, res) => {
   try {
     // Get all price rules
     const rulesResp = await axios.get(
-      `https://${SHOP}/admin/api/2024-10/price_rules.json`,
+      `https://${shop}/admin/api/2024-10/price_rules.json`,
       {
         headers: {
           "X-Shopify-Access-Token": ADMIN_TOKEN,
@@ -154,7 +154,7 @@ app.post("/webhooks/discounts/create", async (req, res) => {
     // Search for existing discount code
     for (const rule of rulesResp.data.price_rules) {
       const codesResp = await axios.get(
-        `https://${SHOP}/admin/api/2024-10/price_rules/${rule.id}/discount_codes.json`,
+        `https://${shop}/admin/api/2024-10/price_rules/${rule.id}/discount_codes.json`,
         {
           headers: {
             "X-Shopify-Access-Token": ADMIN_TOKEN,
@@ -178,7 +178,7 @@ app.post("/webhooks/discounts/create", async (req, res) => {
 
     // Create a new price rule
     const priceRuleResp = await axios.post(
-      `https://${SHOP}/admin/api/2024-10/price_rules.json`,
+      `https://${shop}/admin/api/2024-10/price_rules.json`,
       {
         price_rule: {
           title: `Loyalty ${discountValue} Off`,
@@ -203,7 +203,7 @@ app.post("/webhooks/discounts/create", async (req, res) => {
 
     // Create discount code
     const discountResp = await axios.post(
-      `https://${SHOP}/admin/api/2024-10/price_rules/${priceRuleId}/discount_codes.json`,
+      `https://${shop}/admin/api/2024-10/price_rules/${priceRuleId}/discount_codes.json`,
       { discount_code: { code: discountCode } },
       {
         headers: {
