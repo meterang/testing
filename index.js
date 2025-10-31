@@ -262,8 +262,6 @@ if (order.note_attributes && order.note_attributes.length > 0) {
   const lineItems = order.line_items || [];
 
   console.log(`Order ID: ${orderId}`);
-  console.log(`Email: ${email}`);
-  console.log(`Phone: ${customerPhone}`);
   console.log(`RedeemedPoints: ${redeemedPoints}`);
 
   // Prepare payload for Loyalytics API
@@ -316,10 +314,12 @@ if(redeemedPoints > 0){
       }
     );
 
-    const tokenText = await tokenResponse.text();
-    console.log("🔑 Auth Token Response:", tokenText);
+    const tokenJson = await tokenResponse.json();
+    console.log("🔑 Auth Token Response:", tokenJson);
 
-    const token = tokenText.replace(/"/g, "");
+    // Extract the actual token string
+    const token = tokenJson?.data?.[0]?.token;
+    if (!token) throw new Error("Auth token missing in response");
     
     const response = await fetch(
       "https://api.loyalytics.ai/swan/dev/swan-test/redeem-points",
