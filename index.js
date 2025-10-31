@@ -305,14 +305,29 @@ if (order.note_attributes && order.note_attributes.length > 0) {
 if(redeemedPoints > 0){
   // Send to Loyalytics
   try {
+     const tokenResponse = await fetch(
+      "https://api.loyalytics.ai/swan/dev/auth/swan-test/get-auth-token",
+      {
+        method: "GET",
+        headers: {
+          "Ocp-Apim-Subscription-Key": "4cc03d9a494d4cffba53b2c9534a9e94",
+          client: "swan-test",
+        },
+      }
+    );
+
+    const tokenText = await tokenResponse.text();
+    console.log("🔑 Auth Token Response:", tokenText);
+
+    const token = tokenText.replace(/"/g, "");
+    
     const response = await fetch(
       "https://api.loyalytics.ai/swan/dev/swan-test/redeem-points",
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization:
-            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnQiOiJzd2FuLXRlc3QiLCJwdXJwb3NlIjoiYXBpLWF1dGgiLCJjb3VudHJ5IjoiIiwiaWF0IjoxNzYxODA5MDI5LCJleHAiOjE3NjE4OTU0Mjl9.IZw2J2TUCc1BlLh_Zl-YPxWa4EtUpxrgG3d6MgKU8XU",
+          Authorization: token,
         },
         body: JSON.stringify(payload),
       }
