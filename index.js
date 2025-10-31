@@ -209,7 +209,7 @@ app.post("/shopify-proxy", async (req, res) => {
     });
 
     // const data = await response.json();
-    res.json({ success: true, data });
+    res.json({ success: true});
   } catch (error) {
     console.error("Cart update failed:", error);
     res.status(500).json({ success: false, error: error.message });
