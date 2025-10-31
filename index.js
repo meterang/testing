@@ -181,7 +181,7 @@ app.post("/webhooks/discounts/create", async (req, res) => {
       `https://${SHOP}/admin/api/2024-10/price_rules.json`,
       {
         price_rule: {
-          title: `Loyalty ${discountValue} Off`,
+          title: `LOYALTY${discountValue}`,
           target_type: "line_item",
           target_selection: "all",
           allocation_method: "across",
