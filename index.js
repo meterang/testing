@@ -46,7 +46,7 @@ app.get("/auth", (req, res) => {
  
   const state = crypto.randomBytes(8).toString("hex");
  
-  const isProduction = NODE_ENV === "production";
+  const isProduction = process.env.NODE_ENV === "production";
  
   res.cookie("state", state, {
     httpOnly: true,
