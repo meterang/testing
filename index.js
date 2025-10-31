@@ -200,7 +200,7 @@ const formData = new FormData();
   formData.append('attributes[_redeemed_points]', points.toString());
   formData.append('attributes[_discount_code]', discountCode);
 
-  await fetch('https://${SHOP}/cart/update.js', {
+  await fetch(`https://${SHOP}/cart/update.js`, {
     method: 'POST',
     body: formData,
   });
