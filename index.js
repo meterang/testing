@@ -321,8 +321,13 @@ app.post("/webhooks/orders-create", async (req, res) => {
   // Extract required fields
   const orderId = order.id;
   const email = order.email;
-  // const customerPhone = order.customer?.phone || order.billing_address?.phone || "";
-const customerPhone = 917487850484;
+const rawPhone =
+  order.customer?.phone ||
+  order.billing_address?.phone ||
+  order.shipping_address?.phone ||
+  "";
+const customerPhone = rawPhone.replace(/\+/g, "").trim();
+// const customerPhone = 917487850484;
   let redeemedPoints = 0;
 
 if (order.note_attributes && order.note_attributes.length > 0) {
