@@ -135,7 +135,7 @@ app.listen(3000, () =>
   console.log("🚀 Shopify OAuth app running on http://localhost:3000")
 );
 const SHOP = "swanloyalytics.myshopify.com";
-const ADMIN_TOKEN = accessToken;
+const ADMIN_TOKEN = "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";
 app.post("/webhooks/discounts/create", async (req, res) => {
   const { discountCode, discountValue } = req.body;
 
