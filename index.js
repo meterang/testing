@@ -316,7 +316,7 @@ app.post("/webhooks/orders-create", async (req, res) => {
 
   const order = req.body;
   console.log("✅ Order Create Webhook Received:");
-  // console.log(JSON.stringify(order, null, 2));
+  console.log(JSON.stringify(order, null, 2));
 
   // Extract required fields
   const orderId = order.id;
