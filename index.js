@@ -46,11 +46,16 @@ app.get("/auth", (req, res) => {
   if (!shop) return res.status(400).send("Missing shop parameter");
 
   const state = crypto.randomBytes(8).toString("hex");
-  res.cookie("state", state, {
+
+  const isProduction = process.env.NODE_ENV === "production";
+
+res.cookie("state", state, {
   httpOnly: true,
-  secure: true,
-  sameSite: "none",
+  secure: isProduction, // true only in production (HTTPS)
+  sameSite: isProduction ? "none" : "lax",
+  path: "/", // ensure it's available on all routes
 });
+
 console.log("State from cookie:", req.cookies.state);
 console.log("State from query:", state);
 
