@@ -333,7 +333,19 @@ if (order.note_attributes && order.note_attributes.length > 0) {
     redeemedPoints = Number(pointsAttr.value) || 0;
   }
 }
+  if (redeemedPoints === 0 && order.discount_applications?.length > 0) {
+    const discount = order.discount_applications.find((d) =>
+      d.code?.toUpperCase().startsWith("LOYALTY")
+    );
 
+    if (discount) {
+      const match = discount.code.match(/LOYALTY(\d+)/i);
+      if (match && match[1]) {
+        redeemedPoints = parseInt(match[1], 10);
+        console.log(`💰 Found loyalty discount code: ${discount.code}, RedeemedPoints: ${redeemedPoints}`);
+      }
+    }
+  }
   const lineItems = order.line_items || [];
 
   console.log(`Order ID: ${orderId}`);
