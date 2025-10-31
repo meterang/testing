@@ -188,9 +188,34 @@ app.post("/api/get-customer-points", async (req, res) => {
     return res.status(500).json({ error: err.message });
   }
 });
-
 const SHOP = "swanloyalytics.myshopify.com";
 const ADMIN_TOKEN = "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";
+app.post("/shopify-proxy", async (req, res) => {
+  const { points, finalCode } = req.body;
+
+  try {
+    const formData = new URLSearchParams();
+    formData.append("attributes[loyalty_points]", points.toString());
+    formData.append("attributes[_redeemed_points]", points.toString());
+    formData.append("attributes[_discount_code]", finalCode);
+
+    // This calls Shopify’s actual endpoint (from store origin)
+    const response = await fetch(`https://${SHOP}/cart/update.js`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: formData.toString(),
+    });
+
+    const data = await response.json();
+    res.json({ success: true, data });
+  } catch (error) {
+    console.error("Cart update failed:", error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 app.post("/webhooks/discounts/create", async (req, res) => {
   const { discountCode, discountValue } = req.body;
 
